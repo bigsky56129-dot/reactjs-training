@@ -17,6 +17,14 @@ const Login: React.FC = () => {
     const auth = useContext(AuthenticatedContext);
     const navigate = useNavigate();
 
+    // if already logged in, redirect according to role
+    React.useEffect(() => {
+        const user = auth?.user;
+        if (!user) return;
+        if (user.role === 'officer') navigate('/pages/clients');
+        else navigate(`/pages/user/${user.id}/pi`);
+    }, [auth, navigate]);
+
     const validate = () => {
         const emailRx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         let ok = true;

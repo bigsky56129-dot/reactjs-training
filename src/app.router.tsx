@@ -1,10 +1,11 @@
 import pagesRoutes from "./pages/pages.routes";
-import {createBrowserRouter, Navigate} from "react-router-dom";
+import {createBrowserRouter} from "react-router-dom";
+import RedirectRoot from "./pages/RedirectRoot";
 
 const appRouter = createBrowserRouter([
     {
         path: '',
-        element: <Navigate to="/login" replace />
+        element: <RedirectRoot />
     },
     ...pagesRoutes
 ])
