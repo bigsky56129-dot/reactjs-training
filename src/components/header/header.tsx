@@ -3,7 +3,8 @@ import {Link} from "react-router-dom";
 import {AuthenticatedContext} from "../../shared/Authenticated";
 
 const Header = () => {
-    const isAuthenticated = useContext(AuthenticatedContext);
+    const auth = useContext(AuthenticatedContext);
+    const user = auth?.user;
     const links: Array<Record<string, string>> = [];
     return (
         <nav className="fixed z-30 w-full bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
@@ -19,7 +20,7 @@ const Header = () => {
                                 <span className="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">Simple KYC</span>
                         </a>
                         {
-                            isAuthenticated ? (<form action="#" method="GET" className="hidden lg:block lg:pl-3.5">
+                            user ? (<form action="#" method="GET" className="hidden lg:block lg:pl-3.5">
                                 <label htmlFor="topbar-search" className="sr-only">Search</label>
                                 <div className="relative mt-1 lg:w-96">
                                     <div
@@ -40,7 +41,7 @@ const Header = () => {
 
                     </div>
                     {
-                        isAuthenticated ? (
+                        user ? (
                             <div className="flex items-center">
                                 <div className="hidden mr-3 -mb-1 sm:block">
                                     <span></span>
@@ -432,11 +433,11 @@ const Header = () => {
                                     }}>
                                         <div className="px-4 py-3" role="none">
                                             <p className="text-sm text-gray-900 dark:text-white" role="none">
-                                                {isAuthenticated.name}
+                                                {user?.name}
                                             </p>
                                             <p className="text-sm font-medium text-gray-900 truncate dark:text-gray-300"
                                                role="none">
-                                                {isAuthenticated.email}
+                                                {user?.email}
                                             </p>
                                         </div>
                                         <ul className="py-1" role="none">

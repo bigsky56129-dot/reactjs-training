@@ -1,4 +1,39 @@
-const ResetPassword = () => {
+import React, {useState} from 'react';
+import {useNavigate} from 'react-router-dom';
+
+const ResetPassword: React.FC = () => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirm, setConfirm] = useState('');
+    const [errors, setErrors] = useState<{email?: string; password?: string; confirm?: string}>({});
+    const [loading, setLoading] = useState(false);
+    const [success, setSuccess] = useState<string | null>(null);
+    const navigate = useNavigate();
+
+    const validate = () => {
+        const e: typeof errors = {};
+        const emailRx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email || !emailRx.test(email)) e.email = 'Please enter a valid email address.';
+        if (!password || password.length < 6) e.password = 'Password must be at least 6 characters.';
+        if (confirm !== password) e.confirm = 'Passwords do not match.';
+        setErrors(e);
+        return Object.keys(e).length === 0;
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!validate()) return;
+        setLoading(true);
+        try {
+            // In real app, post to server to reset the password
+            await new Promise(r => setTimeout(r, 600));
+            setSuccess('Password updated. Redirecting to login...');
+            setTimeout(() => navigate('/login'), 900);
+        } finally {
+            setLoading(false);
+        }
+    }
+
     return (
         <div className="flex flex-col items-center justify-center px-6 pt-8 mx-auto md:h-screen pt:mt-0 dark:bg-gray-900">
             <a href="" className="flex items-center justify-center mb-8 text-2xl font-semibold lg:mb-10 dark:text-white">
@@ -9,18 +44,21 @@ const ResetPassword = () => {
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                     Reset your password
                 </h2>
-                <form className="mt-8 space-y-6" action="#">
+                <form onSubmit={handleSubmit} className="mt-8 space-y-6" action="#">
                     <div>
                         <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your email</label>
-                        <input type="email" name="email" id="email" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="name@company.com" required/>
+                        <input value={email} onChange={e => setEmail(e.target.value)} type="email" name="email" id="email" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="name@company.com" required aria-invalid={!!errors.email} />
+                        {errors.email ? <div className="text-xs text-red-600 mt-1">{errors.email}</div> : null}
                     </div>
                     <div>
                         <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">New password</label>
-                        <input type="password" name="password" id="password" placeholder="••••••••" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" required/>
+                        <input value={password} onChange={e => setPassword(e.target.value)} type="password" name="password" id="password" placeholder="••••••••" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" required aria-invalid={!!errors.password} />
+                        {errors.password ? <div className="text-xs text-red-600 mt-1">{errors.password}</div> : null}
                     </div>
                     <div>
                         <label htmlFor="confirm-password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Confirm New Password</label>
-                        <input type="password" name="confirm-password" id="confirm-password" placeholder="••••••••" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" required/>
+                        <input value={confirm} onChange={e => setConfirm(e.target.value)} type="password" name="confirm-password" id="confirm-password" placeholder="••••••••" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" required aria-invalid={!!errors.confirm} />
+                        {errors.confirm ? <div className="text-xs text-red-600 mt-1">{errors.confirm}</div> : null}
                     </div>
                     <div className="flex items-start">
                         <div className="flex items-center h-5">
@@ -30,7 +68,8 @@ const ResetPassword = () => {
                             <label htmlFor="remember" className="font-medium text-gray-900 dark:text-white">I accept the <a href="#" className="text-primary-700 hover:underline dark:text-primary-500">Terms and Conditions</a></label>
                         </div>
                     </div>
-                    <button type="submit" className="w-full px-5 py-3 text-base font-medium text-center text-white rounded-lg bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 sm:w-auto dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">Reset password</button>
+                    {success ? <div className="text-sm text-green-600">{success}</div> : null}
+                    <button disabled={loading} type="submit" className="w-full px-5 py-3 text-base font-medium text-center text-white rounded-lg bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 sm:w-auto dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">{loading ? 'Resetting…' : 'Reset password'}</button>
                 </form>
             </div>
         </div>

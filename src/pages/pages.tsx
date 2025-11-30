@@ -4,8 +4,11 @@ import {Outlet} from "react-router";
 import Footer from "../components/footer/footer";
 import React, {useContext} from "react";
 import {AuthenticatedContext} from "../shared/Authenticated";
+import {Navigate} from "react-router";
+
 const Pages = () => {
-    const isAuthenticated = useContext(AuthenticatedContext)
+    const auth = useContext(AuthenticatedContext);
+    const isAuthenticated = !!auth?.user;
 
     return (
         <>
@@ -22,10 +25,7 @@ const Pages = () => {
                         </main>
                     </div>
                 </div>
-            ) : <div>
-                <Outlet></Outlet>
-            </div>
-            }           
+            ) : <Navigate to="/login" replace />}
         </>
     )
 }

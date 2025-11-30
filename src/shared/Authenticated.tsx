@@ -1,19 +1,26 @@
-import {createContext, ReactElement} from "react";
+import React, {createContext, ReactElement, useState} from "react";
 
-interface User {
+export interface User {
+    id: string;
     name: string;
     email: string;
+    role?: 'user' | 'officer';
 }
 
-const fakeUser = {
-    name: "Neo Amstrong",
-    email: "neo.amstrong@notarealmail.com"
+type AuthContextType = {
+    user: User | null;
+    setUser: React.Dispatch<React.SetStateAction<User | null>>;
 }
 
-const AuthenticatedContext = createContext<User|null>(null);
+const AuthenticatedContext = createContext<AuthContextType | undefined>(undefined);
 
 const AuthenticatedProvider = ({children}: {children: ReactElement}) => {
-    return (<AuthenticatedContext.Provider value={fakeUser}>{children}</AuthenticatedContext.Provider>)
+    // The app starts without an authenticated user by default.
+    const [user, setUser] = useState<User | null>(null);
+
+    return (
+        <AuthenticatedContext.Provider value={{user, setUser}}>{children}</AuthenticatedContext.Provider>
+    )
 }
 
-export { AuthenticatedProvider, AuthenticatedContext};
+export { AuthenticatedProvider, AuthenticatedContext };
