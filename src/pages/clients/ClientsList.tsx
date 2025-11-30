@@ -1,4 +1,5 @@
-import React, {useEffect, useState} from 'react';
+import React, { useState } from 'react';
+import { useFetch } from '../../hooks/use-fetch';
 import {Link} from 'react-router-dom';
 
 type APIUser = {
@@ -11,41 +12,15 @@ type APIUser = {
 }
 
 const ClientsList: React.FC = () => {
-  const [users, setUsers] = useState<APIUser[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
   // paging
   const [limit] = useState<number>(10);
   const [skip, setSkip] = useState<number>(0);
-  const [total, setTotal] = useState<number>(0);
 
-  useEffect(() => {
-    let cancelled = false;
-    const fetchUsers = async () => {
-      setError(null);
-      setLoading(true);
-      try {
-        const res = await fetch(`https://dummyjson.com/users?limit=${limit}&skip=${skip}`);
-        if (!res.ok) throw new Error('Failed to fetch users');
-        const data = await res.json();
-        if (!cancelled) {
-          setUsers(Array.isArray(data.users) ? data.users : []);
-          setTotal(Number(data.total ?? 0));
-        }
-      } catch (err) {
-        console.error(err);
-        if (!cancelled) setError('Unable to load users');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
+  const apiUrl = `https://dummyjson.com/users?limit=${limit}&skip=${skip}`;
+  const { data, loading, error } = useFetch<{ users: APIUser[]; total: number }>(apiUrl);
+  const users = data?.users ?? [];
 
-    fetchUsers();
-
-    return () => { cancelled = true };
-  }, [limit, skip]);
-
+  const total = data?.total ?? 0;
   const currentPage = Math.floor(skip / limit) + 1;
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
@@ -60,7 +35,7 @@ const ClientsList: React.FC = () => {
         {loading ? (
           <div className="text-center py-6">Loading users…</div>
         ) : error ? (
-          <div className="text-center text-red-600 py-6">{error}</div>
+          <div className="text-center text-red-600 py-6">{error?.message ?? String(error)}</div>
         ) : users.length === 0 ? (
           <div className="text-center py-6">No users found.</div>
         ) : (
