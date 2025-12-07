@@ -1,7 +1,7 @@
 import React from 'react';
-import './app.css';
+import './App.css';
 import {RouterProvider, } from "react-router";
-import appRouter from "./app.router";
+import appRouter from "./App.router";
 import {AuthenticatedProvider} from "./shared/authenticated";
 
 function App() {
