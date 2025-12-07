@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import {Link} from 'react-router-dom';
+import {Link, useNavigate} from 'react-router-dom';
 import { fetchUsers, APIUser } from '../../services/api';
 import { useAuth } from '../../hooks/use-auth';
 import { hasPermission } from '../../utils/rbac';
-import { useNavigate } from 'react-router-dom';
 
 const ClientsList: React.FC = () => {
   const { user: currentUser } = useAuth();
