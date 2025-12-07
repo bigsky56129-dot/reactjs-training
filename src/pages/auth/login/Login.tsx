@@ -11,7 +11,7 @@ const Login: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
 
     // validation state
-    const [emailError, setEmailError] = useState<string | null>(null);
+    const [usernameError, setUsernameError] = useState<string | null>(null);
     const [passwordError, setPasswordError] = useState<string | null>(null);
 
     const auth = useContext(AuthenticatedContext);
@@ -28,25 +28,20 @@ const Login: React.FC = () => {
     const validate = () => {
         let ok = true;
         
-        // // Username validation: Required, Length (8-10)
-        // if (!email || email.length < 8 || email.length > 10) {
-        //     setEmailError('Username must be between 8-10 characters.');
-        //     ok = false;
-        // } else {
-        //     setEmailError(null);
-        // }
+        // Basic validation - just check if fields are filled
+        if (!email) {
+            setUsernameError('Username or email is required.');
+            ok = false;
+        } else {
+            setUsernameError(null);
+        }
 
-        // Password validation: Required, Length (12-16), Content({[a-zA-Z]}{[0-9]}{@,#,&!})
-        // const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@#&!]).{12,16}$/;
-        // if (!password || password.length < 12 || password.length > 16) {
-        //     setPasswordError('Password must be between 12-16 characters.');
-        //     ok = false;
-        // } else if (passwordRegex.test(password)) {
-        //     setPasswordError(null);
-        // } else {
-        //     setPasswordError('Password must contain letters, numbers, and at least one special character (@, #, &, !).');
-        //     ok = false;
-        // }
+        if (!password) {
+            setPasswordError('Password is required.');
+            ok = false;
+        } else {
+            setPasswordError(null);
+        }
 
         return ok;
     };
@@ -63,10 +58,24 @@ const Login: React.FC = () => {
             if (!res.ok) throw new Error('Failed to fetch user');
             const data = await res.json();
             const users = Array.isArray(data.users) ? data.users : [];
-            // Prefer exact email match
-            const found = users.find((u: any) => (u.email || '').toLowerCase() === email.toLowerCase()) || users[0];
+            
+            // Determine if input is email or username
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const isEmail = emailRegex.test(email);
+            
+            // Find user by email or username
+            const found = isEmail 
+                ? users.find((u: any) => (u.email || '').toLowerCase() === email.toLowerCase())
+                : users.find((u: any) => (u.username || '').toLowerCase() === email.toLowerCase());
+            
             if (!found) {
-                setError('No user found for that email');
+                setError(`No user found with that ${isEmail ? 'email' : 'username'}`);
+                return;
+            }
+
+            // Verify password matches
+            if (found.password !== password) {
+                setError('Incorrect password.');
                 return;
             }
 
@@ -112,7 +121,7 @@ const Login: React.FC = () => {
                 </h2>
                 <form onSubmit={handleSubmit} className="mt-8 space-y-6">
                     <div>
-                        <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Username</label>
+                        <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Username or Email</label>
                         <input
                             type="text"
                             name="email"
@@ -120,12 +129,12 @@ const Login: React.FC = () => {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                            placeholder="username"
+                            placeholder="mateon or mateo.nguyen@x.dummyjson.com"
                             required
-                            aria-invalid={!!emailError}
-                            aria-label="Username"
+                            aria-invalid={!!usernameError}
+                            aria-label="Username or Email"
                         />
-                        {emailError ? <div className="text-xs text-red-600 mt-1">{emailError}</div> : null}
+                        {usernameError ? <div className="text-xs text-red-600 mt-1">{usernameError}</div> : null}
                     </div>
                     {/* Role is now determined by the external API — removed manual role selection */}
                     <div>
