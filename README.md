@@ -18,6 +18,19 @@ This project is merely a preconfigured skeleton for the React Training Assignmen
 - npm run tailwind
 - npm start
 
+# How to run tests
+```bash
+# Run all tests once
+npm test -- --watchAll=false
+
+# Run tests in watch mode (interactive)
+npm test
+
+# Run tests with coverage
+npm test -- --coverage --watchAll=false
+```
+For detailed test coverage and information, see [IMPLEMENTATION.md](./IMPLEMENTATION.md#testing)
+
 # User API data
 https://dummyjson.com/users
 
