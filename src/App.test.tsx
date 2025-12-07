@@ -2,8 +2,14 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders learn react link', () => {
+test('renders Simple KYC app', () => {
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  const appElement = screen.getByText(/Simple KYC Authentication/i);
+  expect(appElement).toBeInTheDocument();
+});
+
+test('renders login form', () => {
+  render(<App />);
+  const loginButton = screen.getByLabelText(/Log in/i);
+  expect(loginButton).toBeInTheDocument();
 });
