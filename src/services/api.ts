@@ -152,12 +152,14 @@ export async function uploadProfilePicture(
   const filename = username ? `${username}_profile_picture.${fileExt}` : `user_${userId}_profile_picture.${fileExt}`;
   
   // Create local object URL for preview
-  // In production, upload to S3, Cloudinary, etc. and save to public/images
   const url = URL.createObjectURL(file);
   
   // Store the mapping in localStorage so we can retrieve it later
+  // IMPORTANT: Always use username as the key if available for consistency
+  const storageKey = username ? `profile_picture_${username}` : `profile_picture_${userId}`;
   try {
-    localStorage.setItem(`profile_picture_${username || userId}`, url);
+    localStorage.setItem(storageKey, url);
+    console.log(`Profile picture saved with key: ${storageKey}`);
   } catch (e) {
     console.error('Failed to save profile picture reference', e);
   }
@@ -170,9 +172,23 @@ export async function uploadProfilePicture(
  * Checks localStorage first for uploaded pictures, then falls back to API image
  */
 export function getProfilePictureUrl(username?: string, userId?: string, fallbackUrl?: string): string | null {
-  const key = `profile_picture_${username || userId}`;
-  const stored = localStorage.getItem(key);
-  return stored || fallbackUrl || null;
+  // Prioritize username-based key for consistency
+  let key: string | null = null;
+  if (username) {
+    key = `profile_picture_${username}`;
+  } else if (userId) {
+    key = `profile_picture_${userId}`;
+  }
+  
+  if (key) {
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      console.log(`Profile picture loaded from localStorage with key: ${key}`);
+      return stored;
+    }
+  }
+  
+  return fallbackUrl || null;
 }
 
 // ============= KYC/Review API =============

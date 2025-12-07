@@ -189,7 +189,11 @@ const PersonalInformation: React.FC = () => {
         setFetchError(null);
 
         try {
-            const result = await uploadProfilePicture(id, file, form.username || currentUser?.username);
+            // Use form.username (from loaded data), fallback to currentUser.username
+            const usernameToUse = form.username || currentUser?.username;
+            console.log('Uploading profile picture with username:', usernameToUse);
+            
+            const result = await uploadProfilePicture(id, file, usernameToUse);
             setUserImage(result.url);
             
             // Trigger event to update header profile picture
