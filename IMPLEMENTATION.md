@@ -4,18 +4,35 @@
 
 ### 1. **Profile Management**
 - ✅ **Edit Profile**: Users can edit their personal information
-- ✅ **Save Profile**: Profile changes are saved via API with validation
+- ✅ **Save Profile**: Profile changes are saved via API and persisted in auth context
 - ✅ **Upload Profile Picture**: Users can upload profile pictures (JPG, PNG, GIF, max 800KB)
-- ✅ **Delete Profile Picture**: Users can remove their profile picture
+  - Stored as blob URLs in localStorage with key format: `profile_picture_{username}`
+  - Real-time updates across all components using custom event `profilePictureUpdated`
+- ✅ **Profile Picture Display**: Consistent display in header, profile page, and all user list views
+- ✅ **Date Picker**: Birthday field uses HTML5 date input with proper formatting
+- ✅ **Field Restrictions**: Email and role fields are read-only, cannot be changed
+- ✅ **Department Field**: Displays user's department from company data
+- ✅ **Username Display**: Shows @username in profile menu and throughout UI
 - ✅ **View-Only Mode**: Read-only access for unauthorized users
 
-### 2. **Client Selection & Profile Viewing**
-- ✅ Clients list page displays all users with pagination
-- ✅ Click on any client to view their profile
-- ✅ Profile and KYC sections share current client's personal information
-- ✅ RBAC controls who can access which profiles
+### 2. **User List Management**
+- ✅ **Multiple View Modes**: 
+  - **List View** - Compact list with avatars, username, and gender
+  - **Grid View** - Card-based 3-column layout with badges
+  - **Table View** - Excel-like table with all user fields
+- ✅ **Search Functionality**: Search users by name, email, or username
+- ✅ **Profile Pictures in Lists**: All views display user profile pictures with proper fallback
+- ✅ **Pagination**: Navigate through user pages (10 users per page)
+- ✅ **View Toggle**: Switch between list/grid/table views with icon buttons
+- ✅ **RBAC Protection**: Only officers can access user list
 
-### 3. **Role-Based Access Control (RBAC)**
+### 3. **Dashboard & Navigation**
+- ✅ **Home Dashboard**: Role-based quick actions and statistics
+- ✅ **User Menu Component**: Displays username, role badge, and user ID
+- ✅ **Dynamic Sidebar**: Shows menu items based on user permissions
+- ✅ **Responsive Design**: Works on mobile, tablet, and desktop
+
+### 4. **Role-Based Access Control (RBAC)**
 
 #### User Permissions:
 - ✅ Can see only their own profile page
@@ -31,7 +48,7 @@
 - ✅ Can view Clients list
 - ✅ Can submit KYC reviews
 
-### 4. **API Implementation**
+### 5. **API Implementation**
 
 #### Features:
 - ✅ Centralized API service layer (`src/services/api.ts`)
@@ -44,16 +61,19 @@
 #### API Functions:
 ```typescript
 // User API
-fetchUsers(limit, skip)          // Paginated user list
-searchUsers(query)                // Search users
-fetchUserById(id)                 // Get single user
-updateUserProfile(id, updates)    // Update profile
-uploadProfilePicture(userId, file) // Upload image
+fetchUsers(limit, skip)                      // Paginated user list
+searchUsers(query)                           // Search users
+fetchUserById(id)                            // Get single user
+updateUserProfile(id, updates)               // Update profile
+
+// Profile Picture API
+uploadProfilePicture(userId, file, username) // Upload image to localStorage
+getProfilePictureUrl(username, userId, fallbackUrl) // Get profile picture URL
 
 // KYC/Review API
-getKYCReview(userId)              // Get review for user
-submitKYCReview(review)           // Submit review (Officer)
-getAllKYCReviews()                // Get all reviews (Officer)
+getKYCReview(userId)                         // Get review for user
+submitKYCReview(review)                      // Submit review (Officer)
+getAllKYCReviews()                           // Get all reviews (Officer)
 ```
 
 ### 5. **State Management**
@@ -73,38 +93,53 @@ getAllKYCReviews()                // Get all reviews (Officer)
 
 ```
 src/
-├── components/           # Reusable components
-│   ├── ProtectedRoute.tsx    # RBAC route wrapper
+├── components/              # Reusable components
+│   ├── protected-route.tsx     # RBAC route wrapper
 │   ├── header/
+│   │   ├── header.tsx         # Main header with profile picture
+│   │   └── user-menu.tsx      # User dropdown menu with role badge
 │   ├── footer/
+│   │   └── footer.tsx
 │   └── sidebar/
-├── features/            # Feature-specific components
+│       └── sidebar.tsx        # Permission-based navigation
+├── features/               # Feature-specific components
 │   └── user-profile/
 │       └── components/
-│           ├── UserCard.tsx
-│           └── UserDetail.tsx
-├── hooks/              # Custom hooks
-│   ├── use-auth.ts         # Auth context hook
-│   └── use-fetch.ts        # Fetch with retries
-├── pages/              # Page components
+│           ├── user-card.tsx
+│           └── user-detail.tsx
+├── hooks/                  # Custom hooks
+│   ├── use-auth.ts            # Auth context hook
+│   └── use-fetch.ts           # Fetch with retries
+├── pages/                  # Page components
 │   ├── auth/
-│   │   └── login/
+│   │   ├── login/login.tsx    # Login with username mapping
+│   │   ├── logout/
+│   │   ├── reset-password/
+│   │   └── sign-up/
 │   ├── clients/
-│   │   └── ClientsList.tsx
+│   │   ├── users-list.tsx     # User list with search & view modes
+│   │   └── components/
+│   │       ├── list-view.tsx  # Compact list view
+│   │       ├── grid-view.tsx  # Card grid view
+│   │       └── table-view.tsx # Excel-like table view
+│   ├── home/
+│   │   └── home.tsx           # Dashboard with role-based actions
 │   ├── review/
-│   │   └── ReviewPage.tsx
+│   │   └── review-page.tsx    # KYC review (officer only)
 │   ├── user/
-│   │   └── personal-information/
-│   └── Unauthorized.tsx
-├── services/           # API services
-│   └── api.ts             # Centralized API layer
-├── store/             # Global state management
+│   │   ├── personal-information/
+│   │   │   └── personal-information.tsx  # Profile with upload
+│   │   └── kyc/kyc.tsx
+│   └── unauthorized.tsx
+├── services/              # API services
+│   └── api.ts                # Centralized API layer
+├── store/                 # Global state management
 │   ├── user-store.ts
 │   └── index.ts
-├── shared/            # Shared contexts
-│   └── Authenticated.tsx
-└── utils/             # Helper functions
-    ├── rbac.ts           # RBAC utilities
+├── shared/                # Shared contexts
+│   └── authenticated.tsx     # Auth context with localStorage
+└── utils/                 # Helper functions
+    ├── rbac.ts               # RBAC utilities
     ├── string.ts
     ├── date.ts
     └── validation.ts
