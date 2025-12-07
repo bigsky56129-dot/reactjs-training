@@ -36,8 +36,8 @@ const ResetPassword: React.FC = () => {
 
     return (
         <div className="flex flex-col items-center justify-center px-6 pt-8 mx-auto md:h-screen pt:mt-0 dark:bg-gray-900">
-            <a href="" className="flex items-center justify-center mb-8 text-2xl font-semibold lg:mb-10 dark:text-white">
-            <img src="/logo.png" className="mr-4 h-11" alt="Simple KYC Logo"/>
+            <a href="javascript:void(0)" className="flex items-center justify-center mb-8 text-2xl font-semibold lg:mb-10 dark:text-white">
+            <img src={`${process.env.PUBLIC_URL}/logo.png`} className="mr-4 h-11" alt="Simple KYC Logo"/>
                 <span>Simple KYC - Reset Password</span>
             </a>
             <div className="w-full max-w-xl p-6 space-y-8 bg-white rounded-lg shadow sm:p-8 dark:bg-gray-800">

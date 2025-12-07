@@ -102,7 +102,7 @@ const SignUp: React.FC = () => {
 
         <div className="flex flex-col items-center justify-center px-6 pt-8 mx-auto md:h-screen pt:mt-0 dark:bg-gray-900">
             <Link to="/" className="flex items-center justify-center mb-8 text-2xl font-semibold lg:mb-10 dark:text-white">
-            <img src="/logo.png" className="mr-4 h-11" alt="Simple KYC Logo"/>
+            <img src={`${process.env.PUBLIC_URL}/logo.png`} className="mr-4 h-11" alt="Simple KYC Logo"/>
                 <span>Sign-up for Simple KYC</span>
             </Link>
             <div className="w-full max-w-xl p-6 space-y-8 sm:p-8 bg-white rounded-lg shadow dark:bg-gray-800">
