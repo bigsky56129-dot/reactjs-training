@@ -66,7 +66,7 @@ const Footer = () => {
             </footer>
             <p className="my-10 text-sm text-center text-gray-500">
                 © 2019-2024 <a href="https://flowbite.com/" className="hover:underline"
-                               target="_blank">Flowbite.com</a>. All rights reserved.
+                               target="_blank" rel="noreferrer">Flowbite.com</a>. All rights reserved.
             </p>
         </>
     )
