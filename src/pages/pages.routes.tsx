@@ -1,5 +1,5 @@
-import HomeComponent from "./home/home-component";
-import ClientsList from "./clients/clients-list";
+import Home from "./home/home";
+import UsersList from "./clients/users-list";
 import userRoutes from "./user/user.routes";
 import Pages from "./pages";
 import authRoutes from "./auth/auth.routes";
@@ -16,13 +16,13 @@ const pageRoutes = [
         children: [
             {
                 path: 'home',
-                element: <HomeComponent/>
+                element: <Home/>
             },
             {
                 path: 'clients',
                 element: (
                     <ProtectedRoute requiredPermission="view:all-profiles">
-                        <ClientsList />
+                        <UsersList />
                     </ProtectedRoute>
                 )
             },
