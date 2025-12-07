@@ -73,6 +73,7 @@ export type APIUser = {
   birthDate?: string;
   image?: string;
   role?: string;
+  gender?: string;
   address?: {
     address?: string;
     city?: string;
