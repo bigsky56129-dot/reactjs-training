@@ -26,24 +26,27 @@ https://dummyjson.com/users
 You can use these test accounts to login and test different user roles:
 
 ### Admin User (Officer Role)
-- **Username:** `emilys`
-- **Email:** `emily.johnson@x.dummyjson.com`
-- **Password:** `emilyspass`
-- **User ID:** 1
-- **Permissions:** Can view all profiles, access review page
-
-### Moderator User (Officer Role)
 - **Username:** `michaelw`
 - **Email:** `michael.williams@x.dummyjson.com`
 - **Password:** `michaelwpass`
-- **User ID:** 3
+- **User ID:** 2
+- **Role:**  `admin`
+- **Permissions:** Can view all profiles, access review page
+
+### Moderator User (Officer Role)
+- **Username:** `oliviaw`
+- **Email:** `olivia.wilson@x.dummyjson.com`
+- **Password:** `oliviawpass`
+- **User ID:** 6
+- **Role:**  `moderator`
 - **Permissions:** Can view all profiles, access review page
 
 ### Regular User
-- **Username:** `sophiab`
-- **Email:** `sophia.brown@x.dummyjson.com`
-- **Password:** `sophiabpass`
-- **User ID:** 4
+- **Username:** `averyp`
+- **Email:** `avery.perez@x.dummyjson.com`
+- **Password:** `averyppass`
+- **User ID:** 16
+- **Role:**  `user`
 - **Permissions:** Can only view and edit own profile
 
 **Note:** You can use either username or email to login. All test users are from the DummyJSON API.
