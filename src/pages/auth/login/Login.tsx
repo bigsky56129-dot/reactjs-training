@@ -1,7 +1,7 @@
 import React, {useState, useContext} from 'react';
 import {Link} from "react-router-dom";
 import {useNavigate} from 'react-router-dom';
-import {AuthenticatedContext, User} from '../../../shared/Authenticated';
+import {AuthenticatedContext, User} from '../../../shared/authenticated';
 
 const Login: React.FC = () => {
     const [email, setEmail] = useState<string>('');
@@ -26,21 +26,27 @@ const Login: React.FC = () => {
     }, [auth, navigate]);
 
     const validate = () => {
-        const emailRx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         let ok = true;
-        if (!email || !emailRx.test(email)) {
-            setEmailError('Please enter a valid email address.');
-            ok = false;
-        } else {
-            setEmailError(null);
-        }
+        
+        // // Username validation: Required, Length (8-10)
+        // if (!email || email.length < 8 || email.length > 10) {
+        //     setEmailError('Username must be between 8-10 characters.');
+        //     ok = false;
+        // } else {
+        //     setEmailError(null);
+        // }
 
-        if (!password || password.length < 6) {
-            setPasswordError('Password must be at least 6 characters.');
-            ok = false;
-        } else {
-            setPasswordError(null);
-        }
+        // Password validation: Required, Length (12-16), Content({[a-zA-Z]}{[0-9]}{@,#,&!})
+        // const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@#&!]).{12,16}$/;
+        // if (!password || password.length < 12 || password.length > 16) {
+        //     setPasswordError('Password must be between 12-16 characters.');
+        //     ok = false;
+        // } else if (passwordRegex.test(password)) {
+        //     setPasswordError(null);
+        // } else {
+        //     setPasswordError('Password must contain letters, numbers, and at least one special character (@, #, &, !).');
+        //     ok = false;
+        // }
 
         return ok;
     };
@@ -106,18 +112,18 @@ const Login: React.FC = () => {
                 </h2>
                 <form onSubmit={handleSubmit} className="mt-8 space-y-6">
                     <div>
-                        <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your email</label>
+                        <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Username</label>
                         <input
-                            type="email"
+                            type="text"
                             name="email"
                             id="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                            placeholder="name@company.com"
+                            placeholder="username"
                             required
                             aria-invalid={!!emailError}
-                            aria-label="Email address"
+                            aria-label="Username"
                         />
                         {emailError ? <div className="text-xs text-red-600 mt-1">{emailError}</div> : null}
                     </div>

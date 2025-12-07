@@ -3,7 +3,7 @@ import Sidebar from "../components/sidebar/sidebar";
 import {Outlet} from "react-router";
 import Footer from "../components/footer/footer";
 import React, {useContext} from "react";
-import {AuthenticatedContext} from "../shared/Authenticated";
+import {AuthenticatedContext} from "../shared/authenticated";
 import {Navigate} from "react-router";
 
 const Pages = () => {

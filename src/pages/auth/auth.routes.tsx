@@ -1,5 +1,5 @@
 import { RouteObject } from "react-router";
-import Login from "./login/Login";
+import Login from "./login/login";
 import ResetPassword from "./reset-password/reset-password";
 import Auth from "./auth";
 import SignUp from "./sign-up/sign-up";

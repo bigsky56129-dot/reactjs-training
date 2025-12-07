@@ -1,8 +1,8 @@
 import React from 'react';
-import './App.css';
+import './app.css';
 import {RouterProvider, } from "react-router";
 import appRouter from "./app.router";
-import {AuthenticatedProvider} from "./shared/Authenticated";
+import {AuthenticatedProvider} from "./shared/authenticated";
 
 function App() {
     return (

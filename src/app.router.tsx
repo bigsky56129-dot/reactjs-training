@@ -1,6 +1,6 @@
 import pagesRoutes from "./pages/pages.routes";
 import {createBrowserRouter} from "react-router-dom";
-import RedirectRoot from "./pages/RedirectRoot";
+import RedirectRoot from "./pages/redirect-root";
 
 const appRouter = createBrowserRouter([
     {

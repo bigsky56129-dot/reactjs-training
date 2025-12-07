@@ -1,26 +1,48 @@
-import React, { useState } from 'react';
-import { useFetch } from '../../hooks/use-fetch';
+import React, { useState, useEffect } from 'react';
 import {Link} from 'react-router-dom';
-
-type APIUser = {
-  id: number;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  username?: string;
-  role?: string;
-}
+import { fetchUsers, APIUser } from '../../services/api';
+import { useAuth } from '../../hooks/use-auth';
+import { hasPermission } from '../../utils/rbac';
+import { useNavigate } from 'react-router-dom';
 
 const ClientsList: React.FC = () => {
+  const { user: currentUser } = useAuth();
+  const navigate = useNavigate();
+  
   // paging
   const [limit] = useState<number>(10);
   const [skip, setSkip] = useState<number>(0);
+  const [users, setUsers] = useState<APIUser[]>([]);
+  const [total, setTotal] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const apiUrl = `https://dummyjson.com/users?limit=${limit}&skip=${skip}`;
-  const { data, loading, error } = useFetch<{ users: APIUser[]; total: number }>(apiUrl);
-  const users = data?.users ?? [];
+  // Check permissions
+  useEffect(() => {
+    if (!currentUser || !hasPermission(currentUser.role, 'view:all-profiles')) {
+      navigate('/pages/unauthorized');
+    }
+  }, [currentUser, navigate]);
 
-  const total = data?.total ?? 0;
+  // Fetch users
+  useEffect(() => {
+    const loadUsers = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await fetchUsers(limit, skip);
+        setUsers(data.users);
+        setTotal(data.total);
+      } catch (err: any) {
+        console.error(err);
+        setError(err?.message ?? 'Failed to load users');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUsers();
+  }, [limit, skip]);
   const currentPage = Math.floor(skip / limit) + 1;
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
@@ -35,7 +57,7 @@ const ClientsList: React.FC = () => {
         {loading ? (
           <div className="text-center py-6">Loading users…</div>
         ) : error ? (
-          <div className="text-center text-red-600 py-6">{error?.message ?? String(error)}</div>
+          <div className="text-center text-red-600 py-6">{error}</div>
         ) : users.length === 0 ? (
           <div className="text-center py-6">No users found.</div>
         ) : (

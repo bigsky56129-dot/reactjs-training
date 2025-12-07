@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { AuthenticatedContext, User } from '../shared/Authenticated';
+import { AuthenticatedContext, User } from '../shared/authenticated';
 
 // Small wrapper to the existing AuthenticatedContext so other components can import from store rather than from shared directly
 export function useUserStore() {

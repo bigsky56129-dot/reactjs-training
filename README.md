@@ -17,3 +17,6 @@ This project is merely a preconfigured skeleton for the React Training Assignmen
 # How to start
 - npm run tailwind
 - npm start
+
+# User API data
+https://dummyjson.com/users

@@ -1,6 +1,6 @@
 import React, {useContext} from 'react';
 import {Navigate} from 'react-router-dom';
-import {AuthenticatedContext} from '../shared/Authenticated';
+import {AuthenticatedContext} from '../shared/authenticated';
 
 const RedirectRoot: React.FC = () => {
   const auth = useContext(AuthenticatedContext);
