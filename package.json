@@ -2,6 +2,7 @@
   "name": "simple-kyc",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://bigsky56129-dot.github.io/reactjs-training",
   "dependencies": {
     "@testing-library/jest-dom": "5.17.0",
     "@testing-library/react": "13.4.0",
