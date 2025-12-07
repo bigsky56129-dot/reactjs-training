@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import {Link, useNavigate} from 'react-router-dom';
-import { fetchUsers, searchUsers, getProfilePictureUrl, APIUser } from '../../services/api';
+import { useNavigate } from 'react-router-dom';
+import { fetchUsers, searchUsers, APIUser } from '../../services/api';
 import { useAuth } from '../../hooks/use-auth';
 import { hasPermission } from '../../utils/rbac';
+import ListView from './components/list-view';
+import GridView from './components/grid-view';
+import TableView from './components/table-view';
 
 const ClientsList: React.FC = () => {
   const { user: currentUser } = useAuth();
@@ -160,178 +163,15 @@ const ClientsList: React.FC = () => {
       </div>
 
       <div className="bg-white shadow rounded-lg p-4">
-        {loading ? (
-          <div className="text-center py-6">Loading users…</div>
-        ) : error ? (
-          <div className="text-center text-red-600 py-6">{error}</div>
-        ) : users.length === 0 ? (
-          <div className="text-center py-6">No users found.</div>
-        ) : viewMode === 'list' ? (
-          <ul className="divide-y">
-            {users.map(u => {
-              const profilePic = getProfilePictureUrl(u.username, String(u.id), u.image);
-              return (
-              <li key={u.id} className="py-3 flex items-center justify-between">
-                <div className="flex items-center gap-3 flex-1">
-                  <img 
-                    src={profilePic || 'https://flowbite.com/docs/images/people/profile-picture-5.jpg'} 
-                    alt={u.username || 'User'} 
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-900">
-                      {(u.firstName || u.username) && `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() : u.username}
-                    </div>
-                    <div className="text-sm text-gray-500 mt-1">{u.email}</div>
-                    <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
-                      {u.username && (
-                        <span className="flex items-center">
-                          <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                          </svg>
-                          @{u.username}
-                        </span>
-                      )}
-                      {u.gender && (
-                        <span className="flex items-center">
-                          <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
-                          </svg>
-                          {u.gender.charAt(0).toUpperCase() + u.gender.slice(1)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-xs text-gray-500 mr-2">{u.role ?? 'user'}</div>
-                  <Link to={`/pages/user/${String(u.id)}/pi`} className="text-primary-700 hover:underline">View profile</Link>
-                </div>
-              </li>
-              );
-            })}
-          </ul>
-        ) : viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {users.map(u => {
-              const profilePic = getProfilePictureUrl(u.username, String(u.id), u.image);
-              return (
-              <div key={u.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                <div className="flex items-start gap-3">
-                  <img 
-                    src={profilePic || 'https://flowbite.com/docs/images/people/profile-picture-5.jpg'} 
-                    alt={u.username || 'User'} 
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-gray-900 truncate">
-                      {(u.firstName || u.username) && `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() : u.username}
-                    </h3>
-                    <p className="text-sm text-gray-500 truncate">{u.email}</p>
-                    <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
-                      {u.username && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
-                          @{u.username}
-                        </span>
-                      )}
-                      {u.gender && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
-                          {u.gender.charAt(0).toUpperCase() + u.gender.slice(1)}
-                        </span>
-                      )}
-                      <span className="inline-flex items-center px-2 py-1 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
-                        {u.role ?? 'user'}
-                      </span>
-                    </div>
-                    <Link 
-                      to={`/pages/user/${String(u.id)}/pi`} 
-                      className="mt-3 inline-block text-sm text-primary-700 hover:underline"
-                    >
-                      View profile →
-                    </Link>
-                  </div>
-                </div>
-              </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-800">
-                <tr>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
-                    ID
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
-                    Photo
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
-                    Name
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
-                    Username
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
-                    Email
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
-                    Gender
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
-                    Role
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-700">
-                {users.map(u => {
-                  const profilePic = getProfilePictureUrl(u.username, String(u.id), u.image);
-                  return (
-                  <tr key={u.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
-                      {u.id}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <img 
-                        src={profilePic || 'https://flowbite.com/docs/images/people/profile-picture-5.jpg'} 
-                        alt={u.username || 'User'} 
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                      {(u.firstName || u.username) && `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() : u.username}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      @{u.username || '-'}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {u.email}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {u.gender ? u.gender.charAt(0).toUpperCase() + u.gender.slice(1) : '-'}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300">
-                        {u.role ?? 'user'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      <Link 
-                        to={`/pages/user/${String(u.id)}/pi`} 
-                        className="text-primary-700 hover:text-primary-900 dark:text-primary-500 dark:hover:text-primary-400"
-                      >
-                        View
-                      </Link>
-                    </td>
-                  </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+        {loading && <div className="text-center py-6">Loading users…</div>}
+        {!loading && error && <div className="text-center text-red-600 py-6">{error}</div>}
+        {!loading && !error && users.length === 0 && <div className="text-center py-6">No users found.</div>}
+        {!loading && !error && users.length > 0 && (
+          <>
+            {viewMode === 'list' && <ListView users={users} />}
+            {viewMode === 'grid' && <GridView users={users} />}
+            {viewMode === 'table' && <TableView users={users} />}
+          </>
         )}
 
         {/* pagination - hide when searching */}
@@ -346,7 +186,7 @@ const ClientsList: React.FC = () => {
         )}
         {isSearching && (
           <div className="mt-4 text-sm text-gray-600 text-center">
-            Found {total} result{total !== 1 ? 's' : ''}
+            Found {total} result{total === 1 ? '' : 's'}
           </div>
         )}
       </div>
