@@ -2,7 +2,7 @@ import React, {useState, useEffect, useRef, useContext} from 'react';
 import {useParams, useNavigate} from 'react-router-dom';
 import {useAuth} from '../../../hooks/use-auth';
 import {canEditProfile, canAccessProfile} from '../../../utils/rbac';
-import {fetchUserById, updateUserProfile, uploadProfilePicture, APIUser} from '../../../services/api';
+import {fetchUserById, updateUserProfile, uploadProfilePicture, getProfilePictureUrl, APIUser} from '../../../services/api';
 import {AuthenticatedContext} from '../../../shared/authenticated';
 
 // Helper function to format date for input[type="date"]
@@ -43,7 +43,8 @@ const PersonalInformation: React.FC = () => {
         organization: '',
         role: '',
         department: '',
-        zip: ''
+        zip: '',
+        username: ''
     });
 
     const [userImage, setUserImage] = useState<string | null>(null);
@@ -98,9 +99,12 @@ const PersonalInformation: React.FC = () => {
                     role: data.company?.title ?? '',
                     birthday: data.birthDate ? formatDateForInput(data.birthDate) : '',
                     department: data.company?.department ?? '',
+                    username: data.username ?? '',
                 });
 
-                setUserImage(data.image ?? null);
+                // Check for local profile picture first, fallback to API image
+                const localPicture = getProfilePictureUrl(data.username, id, data.image ?? undefined);
+                setUserImage(localPicture);
             } catch (err: any) {
                 console.error(err);
                 if (!cancelled) setFetchError(err?.message ?? 'Failed to load user');
@@ -185,8 +189,12 @@ const PersonalInformation: React.FC = () => {
         setFetchError(null);
 
         try {
-            const result = await uploadProfilePicture(id, file);
+            const result = await uploadProfilePicture(id, file, form.username || currentUser?.username);
             setUserImage(result.url);
+            
+            // Trigger event to update header profile picture
+            window.dispatchEvent(new CustomEvent('profilePictureUpdated', { detail: { url: result.url } }));
+            
             setSuccess('Profile picture uploaded successfully!');
             setTimeout(() => setSuccess(null), 3000);
         } catch (err: any) {

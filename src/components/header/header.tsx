@@ -1,6 +1,7 @@
 import React, {useContext, useEffect, useRef, useState} from "react";
 import {useNavigate} from 'react-router-dom';
 import {AuthenticatedContext} from "../../shared/authenticated";
+import {getProfilePictureUrl, fetchUserById} from "../../services/api";
 import UserMenu from "./user-menu";
 
 const Header = () => {
@@ -8,7 +9,43 @@ const Header = () => {
     const user = auth?.user;
     const navigate = useNavigate();
     const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const [userImage, setUserImage] = useState<string | null>(null);
     const userMenuRef = useRef<HTMLDivElement | null>(null);
+
+    // Load user profile picture
+    useEffect(() => {
+        if (!user) {
+            setUserImage(null);
+            return;
+        }
+
+        const loadUserImage = async () => {
+            try {
+                const userData = await fetchUserById(user.id);
+                const profilePic = getProfilePictureUrl(user.username, user.id, userData.image ?? undefined);
+                setUserImage(profilePic);
+            } catch (err) {
+                console.error('Failed to load user image', err);
+                // Fallback to default if error
+                setUserImage(null);
+            }
+        };
+
+        loadUserImage();
+
+        // Listen for profile picture updates
+        const handleProfilePictureUpdate = (event: CustomEvent) => {
+            if (event.detail?.url) {
+                setUserImage(event.detail.url);
+            }
+        };
+
+        window.addEventListener('profilePictureUpdated', handleProfilePictureUpdate as EventListener);
+        
+        return () => {
+            window.removeEventListener('profilePictureUpdated', handleProfilePictureUpdate as EventListener);
+        };
+    }, [user]);
 
     // close the user menu when clicking outside or pressing Escape
     useEffect(() => {
@@ -450,8 +487,8 @@ const Header = () => {
                                                     id="user-menu-button-2" aria-expanded={userMenuOpen}
                                                     onClick={() => setUserMenuOpen(v => !v)}>
                                             <span className="sr-only">Open user menu</span>
-                                            <img className="w-8 h-8 rounded-full"
-                                                 src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
+                                            <img className="w-8 h-8 rounded-full object-cover"
+                                                 src={userImage || "https://flowbite.com/docs/images/people/profile-picture-5.jpg"}
                                                  alt="user photo"/>
                                         </button>
                                     </div>

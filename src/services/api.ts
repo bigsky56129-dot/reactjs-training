@@ -140,16 +140,38 @@ export async function updateUserProfile(
  */
 export async function uploadProfilePicture(
   userId: string | number,
-  file: File
+  file: File,
+  username?: string
 ): Promise<{ url: string }> {
   // Simulate upload delay
   await new Promise(resolve => setTimeout(resolve, 1000));
 
+  // Create filename with username
+  const fileExt = file.name.split('.').pop() || 'jpg';
+  const filename = username ? `${username}_profile_picture.${fileExt}` : `user_${userId}_profile_picture.${fileExt}`;
+  
   // Create local object URL for preview
-  // In production, upload to S3, Cloudinary, etc.
+  // In production, upload to S3, Cloudinary, etc. and save to public/images
   const url = URL.createObjectURL(file);
   
+  // Store the mapping in localStorage so we can retrieve it later
+  try {
+    localStorage.setItem(`profile_picture_${username || userId}`, url);
+  } catch (e) {
+    console.error('Failed to save profile picture reference', e);
+  }
+  
   return { url };
+}
+
+/**
+ * Get profile picture URL for a user
+ * Checks localStorage first for uploaded pictures, then falls back to API image
+ */
+export function getProfilePictureUrl(username?: string, userId?: string, fallbackUrl?: string): string | null {
+  const key = `profile_picture_${username || userId}`;
+  const stored = localStorage.getItem(key);
+  return stored || fallbackUrl || null;
 }
 
 // ============= KYC/Review API =============
