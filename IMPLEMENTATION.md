@@ -214,19 +214,25 @@ canEditProfile(userId, role, targetUserId)         // Check edit access
 
 ### RBAC Implementation:
 - `src/utils/rbac.ts` - Permission definitions and helpers
-- `src/components/ProtectedRoute.tsx` - Route protection wrapper
+- `src/components/protected-route.tsx` - Route protection wrapper
 
 ### API Layer:
-- `src/services/api.ts` - All API functions with error handling
+- `src/services/api.ts` - All API functions with error handling and profile picture management
 
 ### Profile Management:
-- `src/pages/user/personal-information/personal-information.tsx` - Profile edit page
+- `src/pages/user/personal-information/personal-information.tsx` - Profile edit page with picture upload
 
 ### Review System:
-- `src/pages/review/ReviewPage.tsx` - KYC review dashboard (Officer only)
+- `src/pages/review/review-page.tsx` - KYC review dashboard (Officer only)
 
-### Client Management:
-- `src/pages/clients/ClientsList.tsx` - User listing with pagination
+### User List Management:
+- `src/pages/clients/users-list.tsx` - User listing with search, pagination, and view modes
+- `src/pages/clients/components/list-view.tsx` - Compact list view
+- `src/pages/clients/components/grid-view.tsx` - Card grid view
+- `src/pages/clients/components/table-view.tsx` - Excel-like table view
+
+### Dashboard:
+- `src/pages/home/home.tsx` - Dashboard with role-based quick actions
 
 ## 🚀 Running the Application
 
@@ -247,17 +253,27 @@ npm test
 ## 📝 Test Credentials
 
 ### Normal User:
-- Username: `emilysmi` (any 8-10 char username from API)
+- Username: `emilysmi` (or any 8-10 char username from DummyJSON API)
 - Password: `Test@1234567` (12-16 chars with letter, number, special char)
+- Role: User (standard permissions)
 
 ### Officer (Admin):
-- Search for users with role "admin" or "moderator" in dummyjson API
-- They will be automatically assigned "officer" role
+- Search for users with role "admin" or "moderator" in DummyJSON API
+- They will be automatically assigned "officer" role with elevated permissions
+- Password: Same validation as normal user
 
 ## ✨ Additional Features
 
-1. **Responsive Design**: Works on mobile, tablet, and desktop
-2. **Dark Mode Support**: UI adapts to dark/light themes
+1. **Responsive Design**: Works on mobile, tablet, and desktop with Tailwind CSS
+2. **Dark Mode Support**: UI adapts to system dark/light theme preferences
+3. **Search & Filter**: Real-time user search by name in user list
+4. **Pagination**: Navigate through large user lists efficiently
+5. **View Modes**: Switch between list, grid, and table views for user data
+6. **Real-time Updates**: Profile picture updates reflect immediately across all components
+7. **Form Validation**: Comprehensive validation for all input fields
+8. **Error Handling**: User-friendly error messages and fallback UI
+9. **GitHub Pages Deployment**: Hash routing for static hosting compatibility
+10. **TypeScript**: Full type safety throughout the application
 3. **Loading States**: Proper feedback during API calls
 4. **Error Handling**: User-friendly error messages
 5. **Form Validation**: Real-time validation with error messages
