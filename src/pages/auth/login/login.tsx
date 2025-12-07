@@ -89,6 +89,7 @@ const Login: React.FC = () => {
                 id,
                 name,
                 email: found.email ?? email,
+                username: found.username,
                 role: appRole
             };
 

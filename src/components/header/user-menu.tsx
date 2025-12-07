@@ -33,7 +33,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ user, isOpen, onSignOut }) => {
             {/* User Info Section */}
             <div className="px-4 py-3" role="none">
                 <p className="text-sm font-semibold text-gray-900 dark:text-white" role="none">
-                    {user.name}
+                    {user.name} {user.username && <span className="text-gray-500 dark:text-gray-400 font-normal">({user.username})</span>}
                 </p>
                 <p className="text-sm font-medium text-gray-900 truncate dark:text-gray-300 mt-1" role="none">
                     {user.email}
