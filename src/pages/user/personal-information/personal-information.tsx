@@ -1,13 +1,27 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useContext} from 'react';
 import {useParams, useNavigate} from 'react-router-dom';
 import {useAuth} from '../../../hooks/use-auth';
 import {canEditProfile, canAccessProfile} from '../../../utils/rbac';
 import {fetchUserById, updateUserProfile, uploadProfilePicture, APIUser} from '../../../services/api';
+import {AuthenticatedContext} from '../../../shared/authenticated';
+
+// Helper function to format date for input[type="date"]
+const formatDateForInput = (dateStr: string): string => {
+    if (!dateStr) return '';
+    // Handle formats like "1999-3-10" and convert to "1999-03-10"
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+        const [year, month, day] = parts;
+        return `${year.padStart(4, '0')}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+    return dateStr;
+};
 
 const PersonalInformation: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { user: currentUser } = useAuth();
+    const auth = useContext(AuthenticatedContext);
     const fileInputRef = useRef<HTMLInputElement>(null);
     
     const [editing, setEditing] = useState(false);
@@ -82,8 +96,8 @@ const PersonalInformation: React.FC = () => {
                     zip: data.address?.postalCode ?? '',
                     organization: data.company?.name ?? '',
                     role: data.company?.title ?? '',
-                    birthday: data.birthDate ?? '',
-                    department: '',
+                    birthday: data.birthDate ? formatDateForInput(data.birthDate) : '',
+                    department: data.company?.department ?? '',
                 });
 
                 setUserImage(data.image ?? null);
@@ -115,7 +129,6 @@ const PersonalInformation: React.FC = () => {
             const updates: Partial<APIUser> = {
                 firstName: form.firstName,
                 lastName: form.lastName,
-                email: form.email,
                 phone: form.phone,
                 birthDate: form.birthday,
                 address: {
@@ -132,6 +145,16 @@ const PersonalInformation: React.FC = () => {
             };
             
             await updateUserProfile(id, updates);
+            
+            // Update authenticated user context if editing own profile
+            if (currentUser && currentUser.id === id && auth?.setUser) {
+                const updatedName = `${form.firstName} ${form.lastName}`.trim();
+                auth.setUser({
+                    ...currentUser,
+                    name: updatedName || currentUser.name,
+                });
+            }
+            
             setEditing(false);
             setSuccess('Profile updated successfully!');
             setTimeout(() => setSuccess(null), 3000);
@@ -326,9 +349,10 @@ const PersonalInformation: React.FC = () => {
                             <div className="col-span-6 sm:col-span-3">
                                 <label htmlFor="email"
                                        className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Email</label>
-                                <input value={form.email} onChange={(e) => handleChange('email', e.target.value)} type="email" name="email" id="email"
+                                <input value={form.email} type="email" name="email" id="email"
+                                readOnly
                                 aria-invalid={!!errors.email}
-                                       className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                                       className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500 cursor-not-allowed opacity-60"
                                         placeholder="example@company.com" required/>
                                     {errors.email ? <div className="text-xs text-red-600 mt-1">{errors.email}</div> : null}
                             </div>
@@ -344,7 +368,7 @@ const PersonalInformation: React.FC = () => {
                             <div className="col-span-6 sm:col-span-3">
                                 <label htmlFor="birthday"
                                        className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Birthday</label>
-                                <input value={form.birthday} onChange={(e) => handleChange('birthday', e.target.value)} type="text" name="birthday" id="birthday"
+                                <input value={form.birthday} onChange={(e) => handleChange('birthday', e.target.value)} type="date" name="birthday" id="birthday"
                                        className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                                        placeholder="15/08/1990" required/>
                             </div>
@@ -358,8 +382,9 @@ const PersonalInformation: React.FC = () => {
                             <div className="col-span-6 sm:col-span-3">
                                 <label htmlFor="role"
                                        className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Role</label>
-                                <input value={form.role} onChange={(e) => handleChange('role', e.target.value)} type="text" name="role" id="role"
-                                       className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                                <input value={form.role} type="text" name="role" id="role"
+                                readOnly
+                                       className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500 cursor-not-allowed opacity-60"
                                        placeholder="React Developer" required/>
                             </div>
                             <div className="col-span-6 sm:col-span-3">
@@ -378,35 +403,34 @@ const PersonalInformation: React.FC = () => {
                                         placeholder="123456" required/>
                                     {errors.zip ? <div className="text-xs text-red-600 mt-1">{errors.zip}</div> : null}
                             </div>
-                            <div className="col-span-6 sm:col-full">
-                                <div className="flex items-center gap-2">
-                                    {canEdit && (
-                                        <>
-                                            <button
-                                                type="button"
-                                                onClick={() => setEditing(prev => !prev)}
-                                                disabled={loading}
-                                                className="text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 disabled:opacity-50">
-                                                {editing ? 'Cancel' : 'Edit'}
-                                            </button>
-                                            {editing && (
-                                                <button
-                                                    className="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800 disabled:opacity-50"
-                                                    type="submit"
-                                                    disabled={loading}>
-                                                    {loading ? 'Saving…' : 'Save Changes'}
-                                                </button>
-                                            )}
-                                        </>
-                                    )}
-                                    {!canEdit && (
-                                        <div className="text-sm text-gray-500">View-only mode</div>
-                                    )}
-                                </div>
-                            </div>
                         </div>
                     </fieldset>
-
+                    <div className="col-span-6 sm:col-full mt-6">
+                        <div className="flex items-center gap-2">
+                            {canEdit && (
+                                <>
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditing(prev => !prev)}
+                                        disabled={loading}
+                                        className="text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 disabled:opacity-50">
+                                        {editing ? 'Cancel' : 'Edit'}
+                                    </button>
+                                    {editing && (
+                                        <button
+                                            className="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800 disabled:opacity-50"
+                                            type="submit"
+                                            disabled={loading}>
+                                            {loading ? 'Saving…' : 'Save Changes'}
+                                        </button>
+                                    )}
+                                </>
+                            )}
+                            {!canEdit && (
+                                <div className="text-sm text-gray-500">View-only mode</div>
+                            )}
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>

@@ -83,6 +83,7 @@ export type APIUser = {
   company?: {
     name?: string;
     title?: string;
+    department?: string;
   };
 };
 
