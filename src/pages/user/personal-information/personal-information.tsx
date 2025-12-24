@@ -29,22 +29,45 @@ const PersonalInformation: React.FC = () => {
     const [uploadingPicture, setUploadingPicture] = useState(false);
     const [success, setSuccess] = useState<string | null>(null);
     const [errors, setErrors] = useState<Record<string,string>>({});
+    const [age, setAge] = useState<string>('');
 
     // form state with defaults from placeholders
-    const [form, setForm] = useState({
+    const [form, setForm] = useState<{
+        firstName: string;
+        lastName: string;
+        country: string;
+        city: string;
+        address: string;
+        addresses: string[];
+        email: string;
+        emails: string[];
+        phone: string;
+        phones: string[];
+        birthday: string;
+        organization: string;
+        role: string;
+        department: string;
+        zip: string;
+        username: string;
+        extraAddresses: { address: string; city: string; country: string; zip: string }[];
+    }>({
         firstName: '',
         lastName: '',
         country: '',
         city: '',
         address: '',
+        addresses: [],
         email: '',
+        emails: [],
         phone: '',
+        phones: [],
         birthday: '',
         organization: '',
         role: '',
         department: '',
         zip: '',
-        username: ''
+        username: '',
+        extraAddresses: [],
     });
 
     const [userImage, setUserImage] = useState<string | null>(null);
@@ -68,8 +91,45 @@ const PersonalInformation: React.FC = () => {
         if (!form.firstName.trim()) e.firstName = 'Required';
         if (!form.lastName.trim()) e.lastName = 'Required';
         if (!emailRx.test(form.email)) e.email = 'Enter a valid email';
+        if (form.emails && form.emails.length) {
+            const invalidIdx = form.emails.findIndex(em => !emailRx.test(em));
+            if (invalidIdx !== -1) e.emails = `Email #${invalidIdx + 1} is invalid`;
+        }
         if (form.phone && !/^\+?[0-9\s-()]{6,}$/.test(form.phone)) e.phone = 'Enter a valid phone';
         if (form.zip && !/^\d{3,10}$/.test(form.zip)) e.zip = 'Enter a valid zip/postal code';
+        if (form.addresses && form.addresses.length) {
+            const invalidAddrIdx = form.addresses.findIndex(a => !a || a.trim().length < 3);
+            if (invalidAddrIdx !== -1) e.addresses = `Address #${invalidAddrIdx + 1} is too short`;
+        }
+        if (form.extraAddresses && form.extraAddresses.length) {
+            const invalidExtraIdx = form.extraAddresses.findIndex(a =>
+                !a.address || a.address.trim().length < 3 ||
+                !a.city || a.city.trim().length < 2 ||
+                !a.country || a.country.trim().length < 2 ||
+                (a.zip && !/^\d{3,10}$/.test(a.zip))
+            );
+            if (invalidExtraIdx !== -1) e.extraAddresses = `Extra address #${invalidExtraIdx + 1} has invalid fields`;
+        }
+        if (form.phones && form.phones.length) {
+            const invalidIndex = form.phones.findIndex(p => !/^\+?[0-9\s-()]{6,}$/.test(p));
+            if (invalidIndex !== -1) e.phones = `Phone #${invalidIndex + 1} is invalid`;
+        }
+        if (!form.birthday) {
+            e.birthday = 'Birthday is required';
+        } else {
+            const birth = new Date(form.birthday);
+            if (isNaN(birth.getTime())) {
+                e.birthday = 'Enter a valid date';
+            } else {
+                const today = new Date();
+                if (birth > today) e.birthday = 'Birthday cannot be in the future';
+                // Age must be >= 18
+                let ageYears = today.getFullYear() - birth.getFullYear();
+                const m = today.getMonth() - birth.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) ageYears--;
+                if (ageYears < 18) e.birthday = 'Must be at least 18 years old';
+            }
+        }
         setErrors(e);
         return Object.keys(e).length === 0;
     }
@@ -90,16 +150,20 @@ const PersonalInformation: React.FC = () => {
                     firstName: data.firstName ?? '',
                     lastName: data.lastName ?? '',
                     email: data.email ?? '',
+                    emails: [],
                     phone: data.phone ?? '',
+                    phones: data.phone ? [data.phone] : [],
                     city: data.address?.city ?? '',
                     country: data.address?.country ?? '',
                     address: data.address?.address ?? '',
+                    addresses: [],
                     zip: data.address?.postalCode ?? '',
                     organization: data.company?.name ?? '',
                     role: data.company?.title ?? '',
                     birthday: data.birthDate ? formatDateForInput(data.birthDate) : '',
                     department: data.company?.department ?? '',
                     username: data.username ?? '',
+                    extraAddresses: [],
                 });
 
                 // Check for local profile picture first, fallback to API image
@@ -119,6 +183,18 @@ const PersonalInformation: React.FC = () => {
 
     const handleChange = (field: string, value: string) => setForm(prev => ({...prev, [field]: value}));
 
+    // Derive age from birthday
+    useEffect(() => {
+        if (!form.birthday) { setAge(''); return; }
+        const d = new Date(form.birthday);
+        if (isNaN(d.getTime())) { setAge(''); return; }
+        const today = new Date();
+        let a = today.getFullYear() - d.getFullYear();
+        const m = today.getMonth() - d.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < d.getDate())) a--;
+        setAge(String(a));
+    }, [form.birthday]);
+
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!validate()) return;
@@ -133,7 +209,7 @@ const PersonalInformation: React.FC = () => {
             const updates: Partial<APIUser> = {
                 firstName: form.firstName,
                 lastName: form.lastName,
-                phone: form.phone,
+                phone: (form.phones && form.phones[0]) || form.phone,
                 birthDate: form.birthday,
                 address: {
                     address: form.address,
@@ -357,6 +433,124 @@ const PersonalInformation: React.FC = () => {
                                 <input value={form.address} onChange={(e) => handleChange('address', e.target.value)} type="text" name="address" id="address"
                                        className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                                        placeholder="e.g. California" required/>
+                                <div className="mt-4">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-sm font-medium text-gray-900 dark:text-white">Other Addresses</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setForm(prev => ({...prev, addresses: [...(prev.addresses||[]), '']}))}
+                                            disabled={!editing}
+                                            className="text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 disabled:opacity-50"
+                                        >Add</button>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {(form.addresses||[]).map((a, idx) => (
+                                            <div key={idx} className="flex gap-2">
+                                                <input
+                                                    value={a}
+                                                    onChange={(e) => setForm(prev => {
+                                                        const next = [...(prev.addresses||[])];
+                                                        next[idx] = e.target.value;
+                                                        return {...prev, addresses: next};
+                                                    })}
+                                                    type="text"
+                                                    className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                                                    placeholder="e.g. California"
+                                                    disabled={!editing}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setForm(prev => {
+                                                        const next = [...(prev.addresses||[])];
+                                                        next.splice(idx, 1);
+                                                        return {...prev, addresses: next};
+                                                    })}
+                                                    disabled={!editing}
+                                                    className="text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 text-xs px-3 py-1.5 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600"
+                                                >Remove</button>
+                                            </div>
+                                        ))}
+                                        {errors.addresses ? <div className="text-xs text-red-600">{errors.addresses}</div> : null}
+                                    </div>
+                                </div>
+                                <div className="mt-6">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-sm font-medium text-gray-900 dark:text-white">Grouped Extra Addresses</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setForm(prev => ({...prev, extraAddresses: [...(prev.extraAddresses||[]), { address: '', city: '', country: '', zip: '' }]}))}
+                                            disabled={!editing}
+                                            className="text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 disabled:opacity-50"
+                                        >Add</button>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {(form.extraAddresses||[]).map((ea, idx) => (
+                                            <div key={idx} className="grid grid-cols-6 gap-2">
+                                                <input
+                                                    value={ea.address}
+                                                    onChange={(e) => setForm(prev => {
+                                                        const next = [...(prev.extraAddresses||[])];
+                                                        next[idx] = { ...next[idx], address: e.target.value };
+                                                        return { ...prev, extraAddresses: next };
+                                                    })}
+                                                    type="text"
+                                                    className="col-span-6 sm:col-span-3 shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"
+                                                    placeholder="Address"
+                                                    disabled={!editing}
+                                                />
+                                                <input
+                                                    value={ea.city}
+                                                    onChange={(e) => setForm(prev => {
+                                                        const next = [...(prev.extraAddresses||[])];
+                                                        next[idx] = { ...next[idx], city: e.target.value };
+                                                        return { ...prev, extraAddresses: next };
+                                                    })}
+                                                    type="text"
+                                                    className="col-span-6 sm:col-span-3 shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"
+                                                    placeholder="City"
+                                                    disabled={!editing}
+                                                />
+                                                <input
+                                                    value={ea.country}
+                                                    onChange={(e) => setForm(prev => {
+                                                        const next = [...(prev.extraAddresses||[])];
+                                                        next[idx] = { ...next[idx], country: e.target.value };
+                                                        return { ...prev, extraAddresses: next };
+                                                    })}
+                                                    type="text"
+                                                    className="col-span-6 sm:col-span-3 shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"
+                                                    placeholder="Country"
+                                                    disabled={!editing}
+                                                />
+                                                <input
+                                                    value={ea.zip}
+                                                    onChange={(e) => setForm(prev => {
+                                                        const next = [...(prev.extraAddresses||[])];
+                                                        next[idx] = { ...next[idx], zip: e.target.value };
+                                                        return { ...prev, extraAddresses: next };
+                                                    })}
+                                                    type="text"
+                                                    className="col-span-6 sm:col-span-3 shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"
+                                                    placeholder="Zip"
+                                                    disabled={!editing}
+                                                />
+                                                <div className="col-span-6">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setForm(prev => {
+                                                            const next = [...(prev.extraAddresses||[])];
+                                                            next.splice(idx, 1);
+                                                            return { ...prev, extraAddresses: next };
+                                                        })}
+                                                        disabled={!editing}
+                                                        className="text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 text-xs px-3 py-1.5 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600"
+                                                    >Remove</button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {errors.extraAddresses ? <div className="text-xs text-red-600">{errors.extraAddresses}</div> : null}
+                                    </div>
+                                </div>
                             </div>
                             <div className="col-span-6 sm:col-span-3">
                                 <label htmlFor="email"
@@ -367,6 +561,46 @@ const PersonalInformation: React.FC = () => {
                                        className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500 cursor-not-allowed opacity-60"
                                         placeholder="example@company.com" required/>
                                     {errors.email ? <div className="text-xs text-red-600 mt-1">{errors.email}</div> : null}
+                                <div className="mt-4">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-sm font-medium text-gray-900 dark:text-white">Other Emails</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setForm(prev => ({...prev, emails: [...(prev.emails||[]), '']}))}
+                                            disabled={!editing}
+                                            className="text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 disabled:opacity-50"
+                                        >Add</button>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {(form.emails||[]).map((em, idx) => (
+                                            <div key={idx} className="flex gap-2">
+                                                <input
+                                                    value={em}
+                                                    onChange={(e) => setForm(prev => {
+                                                        const next = [...(prev.emails||[])];
+                                                        next[idx] = e.target.value;
+                                                        return {...prev, emails: next};
+                                                    })}
+                                                    type="email"
+                                                    className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                                                    placeholder="example@company.com"
+                                                    disabled={!editing}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setForm(prev => {
+                                                        const next = [...(prev.emails||[])];
+                                                        next.splice(idx, 1);
+                                                        return {...prev, emails: next};
+                                                    })}
+                                                    disabled={!editing}
+                                                    className="text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 text-xs px-3 py-1.5 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600"
+                                                >Remove</button>
+                                            </div>
+                                        ))}
+                                        {errors.emails ? <div className="text-xs text-red-600">{errors.emails}</div> : null}
+                                    </div>
+                                </div>
                             </div>
                             <div className="col-span-6 sm:col-span-3">
                                 <label htmlFor="phone-number"
@@ -376,6 +610,46 @@ const PersonalInformation: React.FC = () => {
                                        className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                                         placeholder="e.g. +(12)3456 789" required/>
                                     {errors.phone ? <div className="text-xs text-red-600 mt-1">{errors.phone}</div> : null}
+                                <div className="mt-4">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-sm font-medium text-gray-900 dark:text-white">Other Phones</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setForm(prev => ({...prev, phones: [...(prev.phones||[]), '']}))}
+                                            disabled={!editing}
+                                            className="text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 disabled:opacity-50"
+                                        >Add</button>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {(form.phones||[]).map((p, idx) => (
+                                            <div key={idx} className="flex gap-2">
+                                                <input
+                                                    value={p}
+                                                    onChange={(e) => setForm(prev => {
+                                                        const next = [...(prev.phones||[])];
+                                                        next[idx] = e.target.value;
+                                                        return {...prev, phones: next};
+                                                    })}
+                                                    type="text"
+                                                    className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                                                    placeholder="e.g. +(12)3456 789"
+                                                    disabled={!editing}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setForm(prev => {
+                                                        const next = [...(prev.phones||[])];
+                                                        next.splice(idx, 1);
+                                                        return {...prev, phones: next};
+                                                    })}
+                                                    disabled={!editing}
+                                                    className="text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 text-xs px-3 py-1.5 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600"
+                                                >Remove</button>
+                                            </div>
+                                        ))}
+                                        {errors.phones ? <div className="text-xs text-red-600">{errors.phones}</div> : null}
+                                    </div>
+                                </div>
                             </div>
                             <div className="col-span-6 sm:col-span-3">
                                 <label htmlFor="birthday"
@@ -383,6 +657,15 @@ const PersonalInformation: React.FC = () => {
                                 <input value={form.birthday} onChange={(e) => handleChange('birthday', e.target.value)} type="date" name="birthday" id="birthday"
                                        className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                                        placeholder="15/08/1990" required/>
+                                 {errors.birthday ? <div className="text-xs text-red-600 mt-1">{errors.birthday}</div> : null}
+                            </div>
+                            <div className="col-span-6 sm:col-span-3">
+                                <label htmlFor="age"
+                                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Age</label>
+                                <input value={age} type="text" name="age" id="age"
+                                    readOnly
+                                    className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500 cursor-not-allowed opacity-60"
+                                    placeholder="Calculated automatically" />
                             </div>
                             <div className="col-span-6 sm:col-span-3">
                                 <label htmlFor="organization"
@@ -441,6 +724,13 @@ const PersonalInformation: React.FC = () => {
                             {!canEdit && (
                                 <div className="text-sm text-gray-500">View-only mode</div>
                             )}
+                            <button
+                                type="button"
+                                onClick={() => navigate(`/pages/user/${id}/kyc`)}
+                                disabled={false}
+                                className="ml-auto text-white bg-indigo-700 hover:bg-indigo-800 focus:ring-4 focus:ring-indigo-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-indigo-600 dark:hover:bg-indigo-700 dark:focus:ring-indigo-800 disabled:opacity-50 disabled:cursor-not-allowed">
+                                {canEdit ? 'Open KYC' : 'KYC (officer read-only)'}
+                            </button>
                         </div>
                     </div>
                 </form>
